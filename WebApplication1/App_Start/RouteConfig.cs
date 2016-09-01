@@ -25,7 +25,18 @@ namespace WebApplication1
                 defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
             );
 
-            
+            routes.MapRoute(
+                name: "Register",
+                url: "{controller}/{action}/{id}",
+                defaults: new { controller = "Home", action = "Register1", id = UrlParameter.Optional }
+            );
+
+            routes.MapRoute(
+                name: "Register2",
+                url: "{controller}/{action}/{id}",
+                defaults: new { controller = "Home", action = "Register2", id = UrlParameter.Optional }
+            );
+
 
 
         }

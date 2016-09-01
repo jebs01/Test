@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity.Core.Objects;
 using System.Linq;
+using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
 using WebApplication1.Models;
@@ -29,6 +30,8 @@ namespace WebApplication1.Controllers
 
             return View();
         }
+
+        #region LogOn
 
         //[HttpPost]
         public ActionResult Logon()
@@ -62,7 +65,7 @@ namespace WebApplication1.Controllers
                 //4. After 3 invalid attempts user account gets locked : Done
                 //5. TimeStamp last login : Done
                 //6. Encrypted password : Not done
-                //7. Validate Email : Not done
+                //7. Validate Email : Done
 
                 using (UserManagement context = new UserManagement())
                 {
@@ -155,5 +158,98 @@ namespace WebApplication1.Controllers
 
 
         }
+
+        #endregion
+
+        #region Register
+
+        public ActionResult Register1()
+        {
+
+            return View();
+
+        }
+
+        [HttpPost]
+        public ActionResult Register1(Users Registermodel)
+        {
+            
+
+            if (String.IsNullOrEmpty(Registermodel.Email) || String.IsNullOrEmpty(Registermodel.Password))
+            {
+                ModelState.AddModelError("EmptyEmail", "Did you provide your e-mail address?");
+                ModelState.AddModelError("EmptyPassword", "Did you provide your password?");
+                return View("Register1");
+
+            }
+
+            if (ModelState.IsValid)
+            {
+                using (var context = new UserManagement())
+                {
+                    var GUID = Convert.ToString(System.Guid.NewGuid());
+                    Registermodel.IsActive = 1;
+                    Registermodel.IsVerified = 0;
+                    Registermodel.IsLocked = 0;
+                    Registermodel.SecurityToken = GUID;//String.gunew Guid().ToString();//GUID;
+                    Registermodel.LastLoginDateTime = DateTime.Now;
+                    Registermodel.InvalidAttempts = 0;
+                    Registermodel.CreatedDateTime = DateTime.Now;
+
+
+                    context.Users.Add(Registermodel);
+                    string Email = Registermodel.Email;
+                    string Token = GUID;
+
+                    var stringurl = "http://localhost:52877/Home/Register2?" + "Email=" + Email + "&&" + "Token=" + Token;
+                    //  context.SaveChanges();
+
+                  
+
+
+                  
+                        MailMessage mailMessage = new MailMessage();
+                        MailAddress fromAddress = new MailAddress("jebs01@hotmail.com");
+                        mailMessage.From = fromAddress;
+                        mailMessage.To.Add("jebs01@gmail.com");
+                        mailMessage.Body =  stringurl;
+                        mailMessage.IsBodyHtml = false;
+                        mailMessage.Subject = " Testing Email";
+                        SmtpClient smtpClient = new SmtpClient();
+                        smtpClient.Host = "localhost";
+                        smtpClient.Send(mailMessage);
+                       // return View();
+
+                }
+
+              
+            }
+            return View("DashBoard");
+        }
+        #endregion
+
+        public ActionResult Register2()
+        {
+            var Email = Request.QueryString["Email"];
+            var Token = Request.QueryString["Token"];
+            using (var context = new UserManagement())
+            {
+                
+
+                var validUser = context.Users.FirstOrDefault(u => u.Email == Email && u.SecurityToken == Token);
+
+                if (validUser !=null)
+                {
+                    validUser.IsVerified = 1;
+                    context.SaveChanges();
+                    return View("Register2");
+                }
+            }
+
+
+                return View();
+
+        }
+
     }
 }

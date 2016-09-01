@@ -1,0 +1,21 @@
+﻿@model WebApplication1.Models.Users
+@{
+    ViewBag.Title = "Register1";
+}
+
+<h2>Register1</h2>
+
+@using (Html.BeginForm())
+{
+
+@Html.ValidationSummary(true)
+
+@Html.Label("Email"); 
+@Html.TextBoxFor(m=> m.Email);
+
+@Html.Label("Password");
+@Html.PasswordFor(m => m.Password);
+
+<input type="submit" value="Register" />
+}
+

@@ -31,8 +31,9 @@ namespace WebApplication1.Models
       //  [NotMapped]
         public DateTime? LastLoginDateTime { get; set; }
         public Int32? InvalidAttempts { get; set; }
+        public DateTime? CreatedDateTime { get; set; }
 
-       
+
 
 
     }
