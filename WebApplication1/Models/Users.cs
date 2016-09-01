@@ -16,23 +16,32 @@ namespace WebApplication1.Models
         public int UserID { get; set; }
 
         [Required]
-        [Display(Name = "Email")]
         public string Email { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
-        [Display(Name = "Password")]
+
         public string Password { get; set; }
+        public string Firstname { get; set; }
+        public string Surname { get; set; }
+        public Int32? IsActive { get; set; }
+        public Int32? IsLocked { get; set; }
+        public Int32? IsVerified { get; set; }
+        public string SecurityToken { get; set; }
+      //  [NotMapped]
+        public DateTime? LastLoginDateTime { get; set; }
+        public Int32? InvalidAttempts { get; set; }
 
        
+
+
     }
 
-    public class LibraryManagement : DbContext
+    public class UserManagement : DbContext
     {
-        public LibraryManagement()
-            : base() { }
+        public UserManagement(): base() { }
 
-        public DbSet<Users> Users { get; set; }
+       public DbSet<Users> Users { get; set; }
     }
 
 }

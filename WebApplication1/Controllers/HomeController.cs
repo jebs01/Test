@@ -33,40 +33,125 @@ namespace WebApplication1.Controllers
         //[HttpPost]
         public ActionResult Logon()
         {
-            //var Email = Request["Email"];
-            // ViewBag.Message = "Your Logon page.";
+            
+            return View();
 
-            Users user1 = new Users();
-             return View(user1);
+        }
 
-           // return RedirectToAction("Contact");
-
-         }
-
-        public ActionResult Validate(Users user1)
+        [HttpPost]
+        public ActionResult Logon(Users Logonmodel)
         {
-            //var Email = Convert.ToString();
-            var Email = user1.Email;
-            var password = user1.Password;
+           // var Email = Convert.ToString();
+            var Email = Logonmodel.Email;
+            var password = Logonmodel.Password;
 
-          //  var books = from b in LibraryManagement.Users select b;
-
-            using (LibraryManagement context = new LibraryManagement())
+        if (String.IsNullOrEmpty(Email) || String.IsNullOrEmpty(password))
             {
-                List<Users> userDB = context.Users.ToList();
+                ModelState.AddModelError("EmptyEmail", "Did you provide your e-mail address?");
+                ModelState.AddModelError("EmptyPassword", "Did you provide your password?");
+                return View("Logon");
 
-                if (userDB.Count>1)
-                     View("Index");
-                
-                else
-                    return View("Index");
             }
 
-             //   ViewBag.Message = "Email";
+            //  var books = from b in LibraryManagement.Users select b;
+            if (ModelState.IsValid)
+            {
+                //1. Username and password success : Done
+                //2. Username not found : Done
+                //3. Username valid but password is not : Done
+                //4. After 3 invalid attempts user account gets locked : Done
+                //5. TimeStamp last login : Done
+                //6. Encrypted password : Not done
+                //7. Validate Email : Not done
 
-            return View("Index");
+                using (UserManagement context = new UserManagement())
+                {
+                    // List<Users> userDB = context.Users.ToList();
 
-            // return RedirectToAction("Contact");
+
+                    var userDB = context.Users.FirstOrDefault(u => u.Email == Logonmodel.Email);
+                    if (userDB != null)
+                    {
+
+                        #region LoginValidation
+                        if (userDB.IsActive ==0)
+                        {
+                            ModelState.AddModelError("", "User inactive. Please contact Admin");                          
+                            return View("Logon");
+                        }
+
+                        if (userDB.IsLocked == 1)
+                        {
+                            ModelState.AddModelError("", "User locked out. Please contact Admin");
+                            return View("Logon");
+                        }
+
+                        if (userDB.IsVerified == 0)
+                        {
+                            ModelState.AddModelError("", "User email ID not verified. Please check your email");
+                            return View("Logon");
+                        }
+
+                        if (userDB.InvalidAttempts >= 3)
+                        {
+                            ModelState.AddModelError("", "User Account locked out");
+                            userDB.InvalidAttempts = userDB.InvalidAttempts + 1;
+                            context.SaveChanges();
+                            return View("Logon");
+                        }
+
+#endregion
+
+                        #region LoginSucessOrFailure
+                        if (userDB.Password == Logonmodel.Password &&
+                            userDB.InvalidAttempts <3 )
+                        {
+                            userDB.InvalidAttempts = 0;
+                            userDB.LastLoginDateTime = DateTime.Now;
+
+                            context.SaveChanges();
+                            return View("Dashboard");
+                        }
+                        
+                        else if (userDB.Password != Logonmodel.Password)
+                        {
+                            ModelState.AddModelError("", "Invalid Password, Please try again.");
+                            userDB.InvalidAttempts = userDB.InvalidAttempts + 1;
+                            context.SaveChanges();
+                            return View("Logon");
+                        }
+
+                        #endregion
+                     
+
+
+
+                    }
+
+                    else
+                    {
+                        ModelState.AddModelError("NoUserFound", "User not found");
+                        return View("Logon");
+                    }
+
+
+
+
+                }
+            }
+            //   ViewBag.Message = "Email";
+
+            {
+                var errors = ModelState
+    .Where(x => x.Value.Errors.Count > 0)
+    .Select(x => new { x.Key, x.Value.Errors })
+    .ToArray();
+                return View("Logon");
+
+            }
+
+                // return RedirectToAction("Contact");
+            
 
 
         }
